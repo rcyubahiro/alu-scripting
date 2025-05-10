@@ -1,5 +1,11 @@
 #!/usr/bin/env ruby
-# Capture and output the sender, receiver, and flags
-puts ARGV[0].scan(/from:([^\s]+)/).join + ',' + 
-     ARGV[0].scan(/to:([^\s]+)/).join + ',' + 
-     ARGV[0].scan(/flags:([^\]]+)/).join
+
+log = ARGV[0]
+
+# Use capture groups that stop at the closing bracket
+matches = log.scan(/\[from:([^\]]+)\] \[to:([^\]]+)\] \[flags:([^\]]+)\]/)
+
+# Output if matches were found
+matches.each do |from, to, flags|
+  puts "#{from},#{to},#{flags}"
+end
