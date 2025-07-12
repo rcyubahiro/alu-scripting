@@ -2,6 +2,7 @@
 """Fetches and prints top 10 hot post titles for a subreddit"""
 
 import requests
+import sys
 
 
 def top_ten(subreddit):
@@ -11,12 +12,21 @@ def top_ten(subreddit):
 
     try:
         response = requests.get(url, headers=headers, allow_redirects=False)
-        if response.status_code != 200:
-            print("None")
-            return
-
-        posts = response.json().get('data', {}).get('children', [])
-        for post in posts:
-            print(post['data'].get('title'))
+        if response.status_code == 200:
+            posts = response.json().get('data', {}).get('children', [])
+            for post in posts:
+                title = post['data'].get('title')
+                if title is not None:
+                    print(title)
     except Exception:
-        print("None")
+        pass
+
+    sys.stdout.write("OK")
+    sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Please pass an argument for the subreddit to search.")
+    else:
+        top_ten(sys.argv[1])
