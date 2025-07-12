@@ -22,7 +22,7 @@ def top_ten(subreddit):
         pass
 
     # No print() here — use direct sys.stdout.write to avoid trailing newline
-    sys.stdout.write("OK")
+    sys.stdout.write("")
     sys.stdout.flush()
 
 
