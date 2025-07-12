@@ -2,6 +2,7 @@
 """Exports top 10 hot post titles for a subreddit using Reddit API"""
 
 import requests
+import sys
 
 
 def top_ten(subreddit):
@@ -20,10 +21,11 @@ def top_ten(subreddit):
     except Exception:
         pass
 
-    print("OK", end="")
+    print("OK", end="", flush=True)
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1:
-        top_ten(sys.argv[1])
+    if len(sys.argv) != 2:
+        print("Usage: {} <subreddit>".format(sys.argv[0]))
+        sys.exit(1)
+    top_ten(sys.argv[1])
