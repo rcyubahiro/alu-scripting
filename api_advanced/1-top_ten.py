@@ -21,7 +21,8 @@ def top_ten(subreddit):
     except Exception:
         pass
 
-    print("OK", end="", flush=True)
+    sys.stdout.write("OK")
+    sys.stdout.flush()
 
 
 if __name__ == "__main__":
