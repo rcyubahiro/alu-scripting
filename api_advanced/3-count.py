@@ -1,91 +1,53 @@
 #!/usr/bin/python3
-"""Recursive function to count keywords in hot posts titles of a subreddit"""
-
+""" 3-count.py """
+import json
 import requests
 
 
-def count_words(subreddit, word_list, after=None, counts=None):
-    """
-    Queries Reddit API recursively, counts occurrences of keywords in hot post titles,
-    and prints sorted counts.
+def count_words(subreddit, word_list, after="", count=[]):
+    """ prints a sorted count of given keywords """
 
-    Args:
-        subreddit (str): Subreddit name.
-        word_list (list): List of keywords to count (case-insensitive).
-        after (str): Pagination token for Reddit API (used internally).
-        counts (dict): Accumulated counts of keywords (used internally).
+    if after == "":
+        count = [0] * len(word_list)
 
-    Prints:
-        Sorted counts of keywords in descending order by count, then alphabetically.
-        Prints nothing if subreddit invalid or no matches.
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    request = requests.get(url,
+                           params={'after': after},
+                           allow_redirects=False,
+                           headers={'User-Agent': 'Mozilla/5.0'})
 
-    Returns:
-        None
-    """
-    if counts is None:
-        counts = {}
+    if request.status_code == 200:
+        data = request.json()
 
-    # Normalize word_list to lowercase and sum duplicates
-    word_list_lower = [w.lower() for w in word_list]
-    word_set = set(word_list_lower)
+        for topic in (data['data']['children']):
+            for word in topic['data']['title'].split():
+                for i in range(len(word_list)):
+                    if word_list[i].lower() == word.lower():
+                        count[i] += 1
 
-    url = f"https://www.reddit.com/r/{subreddit}/hot.json"
-    headers = {"User-Agent": "alu-api-project:v1.0 (by /u/yourusername)"}
-    params = {"limit": 100}
-    if after:
-        params["after"] = after
-
-    try:
-        response = requests.get(url, headers=headers, params=params, allow_redirects=False)
-        if response.status_code == 302 or response.status_code != 200:
-            # Invalid subreddit or error
-            if after is None:
-                # Only print if first call and no data
-                return
-            else:
-                # End recursion silently
-                return
-
-        data = response.json().get("data", {})
-        children = data.get("children", [])
-
-        for post in children:
-            title = post.get("data", {}).get("title", "").lower().split()
-            # Count occurrences of each keyword exactly (word boundaries)
-            for word in word_set:
-                # Count exact matches only (case-insensitive)
-                # We consider words separated by spaces, punctuation breaks words
-                # So we check exact matches in the split list
-                count = title.count(word)
-                if count > 0:
-                    counts[word] = counts.get(word, 0) + count
-
-        after = data.get("after")
+        after = data['data']['after']
         if after is None:
-            # End recursion, print sorted results
-            if counts:
-                # Sort by count desc, then alphabetically asc
-                sorted_counts = sorted(
-                    counts.items(),
-                    key=lambda x: (-x[1], x[0])
-                )
-                for word, count in sorted_counts:
-                    print(f"{word}: {count}")
-            return
+            save = []
+            for i in range(len(word_list)):
+                for j in range(i + 1, len(word_list)):
+                    if word_list[i].lower() == word_list[j].lower():
+                        save.append(j)
+                        count[i] += count[j]
 
-        return count_words(subreddit, word_list, after, counts)
+            for i in range(len(word_list)):
+                for j in range(i, len(word_list)):
+                    if (count[j] > count[i] or
+                            (word_list[i] > word_list[j] and
+                             count[j] == count[i])):
+                        aux = count[i]
+                        count[i] = count[j]
+                        count[j] = aux
+                        aux = word_list[i]
+                        word_list[i] = word_list[j]
+                        word_list[j] = aux
 
-    except requests.RequestException:
-        # On request failure, print nothing
-        return
-
-
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) < 3:
-        print(f"Usage: {sys.argv[0]} <subreddit> <list of keywords>")
-        print(f"Ex: {sys.argv[0]} programming 'python java javascript'")
-    else:
-        count_words(sys.argv[1], [x for x in sys.argv[2].split()])
-
+            for i in range(len(word_list)):
+                if (count[i] > 0) and i not in save:
+                    print("{}: {}".format(word_list[i].lower(), count[i]))
+        else:
+            count_words(subreddit, word_list, after, count)
