@@ -16,6 +16,6 @@ def top_ten(subreddit):
             for post in posts:
                 print(post['data'].get('title'))
     except Exception:
-        pass  # Silently ignore errors as per instruction
+        pass
 
-    print("OK")
+    print("OK", end="")
