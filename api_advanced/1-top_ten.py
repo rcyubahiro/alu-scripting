@@ -21,6 +21,7 @@ def top_ten(subreddit):
     except Exception:
         pass
 
+    # No print() here — use direct sys.stdout.write to avoid trailing newline
     sys.stdout.write("OK")
     sys.stdout.flush()
 
